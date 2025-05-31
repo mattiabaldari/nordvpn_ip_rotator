@@ -1,0 +1,19 @@
+services:
+  vpn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vpn
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    secrets:
+      - nordvpn_token
+    environment:
+      - TECHNOLOGY=NordLynx
+      - TOKENFILE=/run/secrets/nordvpn_token
+    restart: unless-stopped
+
+secrets:
+  nordvpn_token:
+    file: ./nordvpn_token.txt
