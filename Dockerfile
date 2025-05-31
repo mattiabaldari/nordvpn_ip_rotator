@@ -8,6 +8,7 @@ RUN apt-get update -y && \
     apt-get install -y curl iputils-ping libc6 wireguard && \
     curl https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn-release/nordvpn-release_1.0.0_all.deb --output /tmp/nordrepo.deb && \
     apt-get install -y /tmp/nordrepo.deb && \
+    apt-get install -y cron vim gawk && \
     apt-get update -y && \
     apt-get install -y nordvpn${NORDVPN_VERSION:+=$NORDVPN_VERSION} && \
     apt-get remove -y nordvpn-release && \
@@ -20,5 +21,11 @@ RUN apt-get update -y && \
 		/var/tmp/*
 
 COPY /rootfs /
-ENV S6_CMD_WAIT_FOR_SERVICES=1
-CMD nord_login && nord_config && nord_connect && nord_migrate && nord_watch
+RUN chmod +x /usr/bin/nord_* || true
+
+ENV S6_CMD_WAIT_FOR_SERVICES=0
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=0
+
+RUN crontab -u root /etc/cron.d/rotate.cron
+
+CMD /etc/init.d/nordvpn start && nord_login && nord_config && nord_connect && nord_migrate && nord_watch && cron
